@@ -1,0 +1,143 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO 8859-1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Predictor de Diabetes</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic">
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.4/angular-material.min.css">
+  </head>
+  
+  <body ng-app="myApp" ng-cloak style="background-color: #efefef" ng-controller="myCtrl" layout="column">
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <span>Predictor de Diabetes</span>
+      </div>
+    </md-toolbar>
+    <md-content flex>
+      <md-card>
+        <md-card-content>
+          <p><em>Ingrese los datos del Paciente:</em></p>
+         </md-card-content>
+      </md-card>
+      <md-card>
+        <md-card-content>
+
+          <div layout="row" layout-align="space-between center">
+            <span>Nro Embarazos</span>
+            <input type="number" ng-model="data.embarazos"></input>
+          </div>
+          <div layout="row" layout-align="space-between center">
+            <span>Glucosa</span>
+            <input type="number" ng-model="data.glucosa"></input>
+          </div>
+          <div layout="row" layout-align="space-between center">
+            <span>Presión</span>
+            <input type="number" ng-model="data.presion"></input>
+          </div>
+          <div layout="row" layout-align="space-between center">
+            <span>Espesor de Piel</span>
+            <input type="number" ng-model="data.espesor_piel"></input>
+          </div>
+          <div layout="row" layout-align="space-between center">
+            <span>Insulina</span>
+            <input type="number" ng-model="data.insulina"></input>
+          </div>
+          <div layout="row" layout-align="space-between center">
+            <span>IMC</span>
+            <input type="number" ng-model="data.imc"></input>
+          </div>
+          <div layout="row" layout-align="space-between center">
+            <span>Diabetes Familiar</span>
+            <input type="number" ng-model="data.diabetes_familia"></input>
+          </div>
+          <div layout="row" layout-align="space-between center">
+            <span>Edad</span>
+            <input type="number" ng-model="data.edad"></input>
+          </div>
+  
+        </md-card-content>
+  
+        <md-card-actions layout="row" layout-align="end center">
+          <md-button ng-click="submit()" class="md-accent md-raised">Predecir</md-button>
+        </md-card-actions>
+  
+      </md-card>
+      <md-card>
+        <md-card-content>
+          <div layout="row" layout-align="space-between center">
+            <span style="font-weight:bold">Predicción:</span>
+            <span style="color:blue;font-weight:bold">{: result :}</span>
+          </div>
+        </md-card-content>
+      </md-card>
+    </md-content>
+  
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-aria.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.4/angular-material.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.js"></script>
+  
+    <script>
+      var app = angular.module('myApp', ['ngMaterial']);
+
+
+
+      app.config(['$interpolateProvider', function($interpolateProvider) {
+        $interpolateProvider.startSymbol('{:');
+        $interpolateProvider.endSymbol(':}');
+      }]);
+  
+      app.config(function($mdThemingProvider) {
+        $mdThemingProvider.theme('default')
+          .primaryPalette('blue-grey')
+          .accentPalette('orange');
+      });
+  
+      app.controller('myCtrl', ['$scope', '$http',
+        function($scope, $http) {
+          $scope.data = {};
+  
+          $scope.submit = function() {
+            console.log($scope.data)
+            $scope.result = "Wait...";
+  
+            $http({
+              method : 'POST',
+              url : 'http://www.francis-gonzales.info:8080/diabetes/predict/',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              data: {
+                "inputs": {
+                    "dense_1_input" : 
+                    [	
+                        [
+                            $scope.data.embarazos, $scope.data.glucosa, 
+                            $scope.data.presion, $scope.data.espesor_piel, 
+                            $scope.data.insulina, $scope.data.imc, 
+                            $scope.data.diabetes_familia, $scope.data.edad
+                        ]
+                    ]
+                }
+            }
+            }).success(function(data, status, headers, config) {
+              console.log(data)
+              if (data.outputs[0][0] > 0.5) {
+                $scope.result = 'El paciente *tiene Diabetes* (' + data.outputs[0][0] + ')';
+              } else {
+                $scope.result = 'El paciente *no* tiene Diabetes (' + data.outputs[0][0] + ')';
+              }
+  
+            }).error(function(data, status, headers, config) {
+              $scope.result = 'Error';
+  
+            });
+  
+          }
+        }
+      ]);
+    </script>
+  </body>
+  </html>
